@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Undian Hadiah</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      margin: 0;
+      background: radial-gradient(circle, #002b5c, #000);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+    }
+    h2 {
+      margin-bottom: 25px;
+      font-size: 24px;
+    }
+    input, button {
+      padding: 14px;
+      width: 100%;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      font-family: 'Outfit', sans-serif;
+    }
+    input {
+      background-color: #ffffffdd;
+      color: #333;
+    }
+    button {
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      font-weight: bold;
+      color: #001f3f;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .kupon {
+      display: none;
+      background: linear-gradient(to bottom right, #ffffff, #e8faff);
+      color: #222;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+      margin-top: 30px;
+    }
+    .kupon-title {
+      color: #d40000;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .kupon-number {
+      background: #d40000;
+      color: white;
+      font-size: 28px;
+      padding: 12px 30px;
+      border-radius: 12px;
+      display: inline-block;
+      margin: 18px 0;
+      letter-spacing: 2px;
+    }
+    canvas {
+      display: none;
+    }
+    #btn-wa {
+      display: none;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #loading {
+      display: none;
+      font-size: 18px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="form-section">
+      <h2>🎉 Form Undian Berhadiah 🎉</h2>
+      <input type="text" id="nama" placeholder="Nama Lengkap">
+      <input type="number" id="wa" placeholder="Nomor WhatsApp">
+      <button onclick="cetakKupon()">🎟️ Cetak Kupon</button>
+    </div>
+
+    <div id="loading">⏳ Kupon sedang dicetak, mohon tunggu...</div>
+
+    <div class="kupon" id="kupon">
+      <div class="kupon-title">🎁KUPON GIVEAWAY🎁</div>
+      <p id="user-data"></p>
+      <div class="kupon-number" id="no-kupon">No: 0000</div>
+      <p style="font-size: 14px;">Rahasiakan Nomor Kupon Anda Jangan Beritahu Orang Lain dan Jangan Tinggalkan Halaman ini Sebelum Tombol Konfirmasi Muncul !!!</p>
+      <button id="btn-download" onclick="downloadGambar()">⬇️ Download Kupon</button>
+      <a id="btn-wa" href="https://wa.me/6282151053585?text=Halo%20Admin,%20saya%20sudah%20mendownload%20kupon%20undian." target="_blank">💬 Tekan Ini Untuk Konfirmasi</a>
+    </div>
+
+    <canvas id="kupon-canvas" width="800" height="450"></canvas>
+  </div>
+
+  <script>
+    let userNama = "";
+    let userWA = "";
+    let userKupon = "";
+
+    window.onload = function () {
+      const savedNama = localStorage.getItem("nama");
+      const savedWA = localStorage.getItem("wa");
+      const savedKupon = localStorage.getItem("kupon");
+
+      if (savedNama && savedWA && savedKupon) {
+        userNama = savedNama;
+        userWA = savedWA;
+        userKupon = savedKupon;
+        document.getElementById("form-section").style.display = "none";
+        showKupon();
+      }
+    };
+
+    function cetakKupon() {
+      const isSudahIsi = localStorage.getItem("nama") && localStorage.getItem("wa") && localStorage.getItem("kupon");
+      if (isSudahIsi) return;
+
+      userNama = document.getElementById("nama").value.trim();
+      userWA = document.getElementById("wa").value.trim();
+      userKupon = Math.floor(1000 + Math.random() * 9000).toString(); // ⬅️ generate acak 4 digit
+
+      if (!userNama || !userWA) {
+        return alert("Lengkapi nama dan nomor WhatsApp.");
+      }
+
+      localStorage.setItem("nama", userNama);
+      localStorage.setItem("wa", userWA);
+      localStorage.setItem("kupon", userKupon);
+
+      document.getElementById("form-section").style.display = "none";
+      document.getElementById("loading").style.display = "block";
+
+      setTimeout(() => {
+        document.getElementById("loading").style.display = "none";
+        showKupon();
+      }, 3000);
+    }
+
+    function showKupon() {
+      document.getElementById("kupon").style.display = "block";
+      document.getElementById("user-data").innerHTML = `
+        Nama: <strong>${userNama}</strong><br>
+        WhatsApp: <strong>${userWA}</strong>
+      `;
+      document.getElementById("no-kupon").textContent = "No: " + userKupon;
+      document.getElementById("btn-download").style.display = "inline-block";
+      document.getElementById("btn-wa").style.display = "inline-block";
+    }
+
+    function downloadGambar() {
+      const canvas = document.getElementById("kupon-canvas");
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#f9f9f9";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#d40000";
+      ctx.font = "bold 36px Outfit";
+      ctx.fillText("🎁KUPON GIVEAWAY YASMIN NAPPER", 40, 60);
+
+      ctx.fillStyle = "#000";
+      ctx.font = "24px Outfit";
+      ctx.fillText(`Nama: ${userNama}`, 40, 120);
+      ctx.fillText(`WhatsApp: ${userWA}`, 40, 160);
+
+      ctx.fillStyle = "#d40000";
+      ctx.fillRect(40, 200, 220, 60);
+      ctx.fillStyle = "white";
+      ctx.font = "bold 30px Outfit";
+      ctx.fillText("No: " + userKupon, 60, 240);
+
+      ctx.fillStyle = "#333";
+      ctx.font = "20px Outfit";
+      ctx.fillText("Simpan Kupon Ini dan Rahasiakan Nomor Kupon Anda!", 40, 310);
+
+      const link = document.createElement("a");
+      link.download = "kupon-undian.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+
+      document.getElementById("btn-download").style.display = "none";
+    }
+  </script>
+</body>
+</html>
